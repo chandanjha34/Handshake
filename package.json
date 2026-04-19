@@ -1,0 +1,26 @@
+{
+  "name": "handshake",
+  "private": true,
+  "workspaces": [
+    "apps/web"
+  ],
+  "scripts": {
+    "test:contracts": "hardhat test --config contracts/hardhat.config.ts",
+    "build:contracts": "hardhat compile --config contracts/hardhat.config.ts",
+    "deploy:factory": "hardhat run contracts/scripts/deployFactory.ts --network arbitrumSepolia --config contracts/hardhat.config.ts",
+    "dev:web": "npm --prefix apps/web run dev",
+    "build:web": "npm --prefix apps/web run build"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^3.0.6",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "@types/chai": "^4.3.20",
+    "@types/mocha": "^10.0.10",
+    "chai": "^4.5.0",
+    "dotenv": "^16.6.1",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.24.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

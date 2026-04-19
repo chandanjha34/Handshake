@@ -1,0 +1,9 @@
+node_modules
+**/node_modules
+.next
+coverage
+contracts/artifacts
+contracts/cache
+.env
+.env.local
+contracts/.env
