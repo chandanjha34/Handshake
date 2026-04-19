@@ -46,23 +46,23 @@ export default function RoomPage({ params }: { params: { room: string } }) {
   return (
     <main className="space-y-6">
       <Card className="space-y-2">
-        <p className="text-sm text-gray-400">Room</p>
-        <p className="font-mono text-sm text-white">{room}</p>
+        <p className="text-sm text-text-secondary">Room</p>
+        <p className="font-mono text-sm text-text">{room}</p>
       </Card>
 
       <section className="grid gap-4 md:grid-cols-2">
         <Card className="space-y-4">
-          <h2 className="text-xl font-semibold">Submit Encrypted Price</h2>
+          <h2 className="text-xl font-bold text-text">Submit Encrypted Price</h2>
           <Input type="number" placeholder="Your reservation price" value={price} onChange={(e) => setPrice(e.target.value)} />
-          <Button className="border-accent/60 bg-accent/20" onClick={submit} disabled={isPending || !address}>
+          <Button onClick={submit} disabled={isPending || !address}>
             {isPending ? 'Submitting...' : 'Encrypt & Submit'}
           </Button>
         </Card>
 
         <Card className="space-y-3">
-          <p className="text-sm text-gray-400">Status</p>
-          <p className="text-lg">{status || 'Loading...'}</p>
-          <div className="space-y-1 text-sm text-gray-300">
+          <p className="text-sm text-text-secondary">Status</p>
+          <p className="text-lg font-semibold text-text">{status || 'Loading...'}</p>
+          <div className="space-y-1 text-sm text-text-secondary">
             <p>Party A: {partyA || '-'}</p>
             <p>Party B: {partyB || '-'}</p>
           </div>
@@ -70,15 +70,15 @@ export default function RoomPage({ params }: { params: { room: string } }) {
       </section>
 
       <Card className="space-y-2">
-        <p className="text-sm text-gray-400">Result</p>
+        <p className="text-sm text-text-secondary">Result</p>
         {status === 'Settled' ? (
           hasDeal ? (
-            <p className="text-2xl font-semibold">Settlement: {settlement?.toString()}</p>
+            <p className="text-2xl font-bold text-accent">Settlement: {settlement?.toString()}</p>
           ) : (
-            <p className="text-2xl font-semibold">No Deal</p>
+            <p className="text-2xl font-bold text-text-secondary">No Deal</p>
           )
         ) : (
-          <p className="text-gray-400">Final output appears only after both encrypted submissions.</p>
+          <p className="text-text-secondary">Final output appears only after both encrypted submissions.</p>
         )}
       </Card>
     </main>

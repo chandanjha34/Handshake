@@ -37,31 +37,31 @@ export default function RoomsPage() {
     <main className="space-y-6">
       <section className="grid gap-4 md:grid-cols-2">
         <Card className="space-y-4">
-          <h2 className="text-xl font-semibold">Create Negotiation Room</h2>
+          <h2 className="text-xl font-bold text-text">Create Negotiation Room</h2>
           <Input placeholder="Counterparty address" value={counterparty} onChange={(e) => setCounterparty(e.target.value)} />
           <Input placeholder="Weight (0-100)" type="number" value={weight} onChange={(e) => setWeight(e.target.value)} />
-          <Button className="border-accent/60 bg-accent/20" onClick={createRoom} disabled={!address || isPending}>
+          <Button onClick={createRoom} disabled={!address || isPending}>
             {isPending ? 'Creating...' : 'Create Room'}
           </Button>
         </Card>
 
         <Card className="space-y-2">
-          <p className="text-sm text-gray-400">Connected wallet</p>
-          <p className="break-all text-sm text-white">{address || 'Connect to continue'}</p>
+          <p className="text-sm text-text-secondary">Connected wallet</p>
+          <p className="break-all text-sm font-mono text-text">{address || 'Connect to continue'}</p>
         </Card>
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Negotiation Rooms</h2>
+        <h2 className="text-xl font-bold text-text">Negotiation Rooms</h2>
         <div className="grid gap-3">
           {(rooms || []).map((room) => (
             <Link key={room} href={`/rooms/${room}`}>
-              <Card className="transition hover:border-accent/60">
-                <p className="font-mono text-sm text-gray-300">{room}</p>
+              <Card className="transition hover:border-accent hover:bg-bg-secondary">
+                <p className="font-mono text-sm text-text-secondary">{room}</p>
               </Card>
             </Link>
           ))}
-          {(!rooms || rooms.length === 0) && <Card className="text-gray-400">No rooms yet.</Card>}
+          {(!rooms || rooms.length === 0) && <Card className="text-text-secondary">No rooms yet.</Card>}
         </div>
       </section>
     </main>
