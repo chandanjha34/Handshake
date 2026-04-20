@@ -18,17 +18,17 @@ export function ConnectWalletButton() {
         className={cn(
           'rounded-[16px_18px_14px_20px] border px-4 py-2 text-sm font-semibold transition shadow-sm',
           isConnected
-            ? 'border-accent bg-accent text-white hover:bg-accent-dark'
-            : 'border-accent bg-panel text-accent hover:bg-accent/10'
+            ? 'border-accent bg-accent text-bg hover:bg-accent-dark'
+            : 'border-border bg-panel text-text hover:border-accent hover:text-accent'
         )}
         aria-haspopup="dialog"
         aria-expanded={isModalOpen}
       >
         {isConnected ? (
           <span className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-white" />
+            <span className="inline-block h-2 w-2 rounded-full bg-bg" />
             {chain?.name || 'Connected'}
-            <span className="text-white/80">{displayAddress}</span>
+            <span className="text-bg/70">{displayAddress}</span>
           </span>
         ) : (
           'Connect Wallet'

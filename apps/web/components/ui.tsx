@@ -17,7 +17,7 @@ export function Button({ className, ...props }: ButtonHTMLAttributes<HTMLButtonE
   return (
     <button
       className={cn(
-        'rounded-[16px_20px_14px_18px] border border-accent px-6 py-3 text-sm font-semibold text-white bg-accent transition hover:bg-accent-dark disabled:opacity-50 shadow-sm hover:shadow-md',
+        'rounded-[16px_20px_14px_18px] border border-accent bg-accent px-6 py-3 text-sm font-semibold text-bg transition hover:bg-accent-dark disabled:opacity-50 shadow-sm hover:shadow-md',
         className
       )}
       {...props}
@@ -29,7 +29,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        'w-full rounded-[18px_14px_20px_16px] border border-border bg-bg-secondary px-4 py-3 text-sm text-text outline-none ring-accent/50 focus:ring-2 focus:border-accent',
+        'w-full rounded-[18px_14px_20px_16px] border border-border bg-bg-secondary px-4 py-3 text-sm text-text outline-none ring-accent/30 focus:ring-2 focus:border-accent',
         className
       )}
       placeholder="Enter value..."

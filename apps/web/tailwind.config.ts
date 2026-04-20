@@ -9,17 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#FFFBF5',
-        'bg-secondary': '#FFF8F0',
-        panel: '#FFFFFF',
-        'panel-alt': '#FFF5ED',
-        border: '#FFDCC4',
-        accent: '#F4A87A',
-        'accent-dark': '#E8965A',
-        'accent-light': '#FFB996',
-        text: '#3D2817',
-        'text-secondary': '#6B4423',
-        'text-tertiary': '#8B5A3C'
+        bg: '#050505',
+        'bg-secondary': '#0f0f10',
+        panel: '#111214',
+        'panel-alt': '#16171a',
+        border: '#2d2f35',
+        accent: '#f4f4f5',
+        'accent-dark': '#d4d4d8',
+        'accent-light': '#ffffff',
+        text: '#f5f5f7',
+        'text-secondary': '#c8cad0',
+        'text-tertiary': '#8f939e'
       },
       borderRadius: {
         'xl2': '1rem',

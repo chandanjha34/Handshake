@@ -1,88 +1,162 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {MockFHE as FHE} from './MockFHE.sol';
-
 contract NegotiationRoom {
-    using FHE for FHE.euint256;
-
     enum Status {
         Waiting,
         Submitted,
-        Settled
+        Proposed,
+        Resolved,
+        Closed
     }
 
     address public immutable partyA;
     address public immutable partyB;
-    uint8 public immutable weightA;
 
     Status public status;
 
-    bool public submittedA;
+    uint256 public immutable creatorPrice;
+
     bool public submittedB;
-    FHE.euint256 private encryptedA;
-    FHE.euint256 private encryptedB;
+    uint256 public counterpartyPrice;
+    uint256 public proposedSettlement;
+
+    bool public decidedA;
+    bool public decidedB;
+    bool public acceptedA;
+    bool public acceptedB;
+
+    uint256 public counterpartyEscrow;
 
     bool public hasDeal;
     uint256 public finalSettlement;
 
-    event PriceSubmitted(address indexed party);
-    event SettlementReady(bool hasDeal, uint256 settlement);
+    event RoomInitialized(address indexed partyA, address indexed partyB, uint256 creatorPrice);
+    event CounterpartyPriceSubmitted(address indexed party, uint256 price, uint256 escrowed);
+    event ProposalReady(uint256 proposedSettlement);
+    event DecisionSubmitted(address indexed party, bool accepted, uint256 escrowed);
+    event RoomResolved(bool hasDeal, uint256 settlement, uint256 refundToCounterparty);
 
-    constructor(address _partyA, address _partyB, uint8 _weightA) {
+    constructor(address _partyA, address _partyB, uint256 _creatorPrice) {
+        require(_partyA != address(0) && _partyB != address(0), 'invalid party');
+        require(_creatorPrice > 0, 'creator price required');
+
         partyA = _partyA;
         partyB = _partyB;
-        weightA = _weightA;
+        creatorPrice = _creatorPrice;
         status = Status.Waiting;
+
+        emit RoomInitialized(_partyA, _partyB, _creatorPrice);
     }
 
-    function submitEncryptedPrice(uint256 encryptedCiphertext) external {
-        if (msg.sender == partyA && !submittedA) {
-            encryptedA = FHE.asEuint256(encryptedCiphertext);
-            submittedA = true;
-            emit PriceSubmitted(msg.sender);
-        } else if (msg.sender == partyB && !submittedB) {
-            encryptedB = FHE.asEuint256(encryptedCiphertext);
-            submittedB = true;
-            emit PriceSubmitted(msg.sender);
+    function submitCounterpartyPrice(uint256 _counterpartyPrice) external payable {
+        require(msg.sender == partyB, 'only counterparty');
+        require(!submittedB, 'already submitted');
+        require(status == Status.Waiting || status == Status.Submitted, 'invalid status');
+        require(_counterpartyPrice > 0, 'counterparty price required');
+        require(msg.value == _counterpartyPrice, 'escrow must equal price');
+
+        counterpartyPrice = _counterpartyPrice;
+        counterpartyEscrow = msg.value;
+        submittedB = true;
+        status = Status.Submitted;
+
+        emit CounterpartyPriceSubmitted(msg.sender, _counterpartyPrice, msg.value);
+
+        _proposeSettlement();
+    }
+
+    function respondToProposal(bool accept) external payable {
+        require(status == Status.Proposed, 'proposal not active');
+
+        if (msg.sender == partyA) {
+            require(!decidedA, 'partyA already decided');
+            require(msg.value == 0, 'partyA cannot escrow');
+
+            decidedA = true;
+            acceptedA = accept;
+            emit DecisionSubmitted(msg.sender, accept, counterpartyEscrow);
+        } else if (msg.sender == partyB) {
+            require(!decidedB, 'partyB already decided');
+
+            counterpartyEscrow += msg.value;
+            if (accept) {
+                require(counterpartyEscrow >= proposedSettlement, 'top up escrow to accept');
+            }
+
+            decidedB = true;
+            acceptedB = accept;
+            emit DecisionSubmitted(msg.sender, accept, counterpartyEscrow);
+        } else {
+            revert('not room participant');
         }
 
-        if (submittedA || submittedB) {
-            status = Status.Submitted;
-        }
-
-        if (submittedA && submittedB && status != Status.Settled) {
-            _settle();
+        if (decidedA && decidedB) {
+            _resolveOutcome();
         }
     }
 
-    function _settle() internal {
-        uint8 weightB = uint8(100 - weightA);
+    function _proposeSettlement() internal {
+        proposedSettlement = (creatorPrice + counterpartyPrice) / 2;
+        status = Status.Proposed;
 
-        FHE.euint256 memory hundred = FHE.asEuint256(100);
-        FHE.euint256 memory wA = FHE.asEuint256(weightA);
-        FHE.euint256 memory wB = FHE.asEuint256(weightB);
+        emit ProposalReady(proposedSettlement);
+    }
 
-        bool overlap = FHE.lte(encryptedA, encryptedB);
+    function _resolveOutcome() internal {
+        uint256 settlement = 0;
+        uint256 refund = 0;
 
-        FHE.euint256 memory weightedA = FHE.mul(encryptedA, wA);
-        FHE.euint256 memory weightedB = FHE.mul(encryptedB, wB);
-        FHE.euint256 memory numerator = FHE.add(weightedA, weightedB);
-        FHE.euint256 memory midpoint = FHE.div(numerator, hundred);
+        if (acceptedA && acceptedB) {
+            settlement = proposedSettlement;
+            if (counterpartyEscrow >= settlement) {
+                hasDeal = true;
+                finalSettlement = settlement;
+                status = Status.Resolved;
+                refund = counterpartyEscrow - settlement;
+            }
+        } else if (acceptedA && !acceptedB) {
+            settlement = (counterpartyPrice + proposedSettlement) / 2;
+            if (counterpartyEscrow >= settlement) {
+                hasDeal = true;
+                finalSettlement = settlement;
+                status = Status.Resolved;
+                refund = counterpartyEscrow - settlement;
+            }
+        }
 
-        FHE.euint256 memory noDealValue = FHE.asEuint256(0);
-        FHE.euint256 memory selected = FHE.select(overlap, midpoint, noDealValue);
+        if (hasDeal) {
+            if (settlement > 0) {
+                (bool paidA, ) = payable(partyA).call{value: settlement}('');
+                require(paidA, 'payout failed');
+            }
 
-        hasDeal = overlap;
-        finalSettlement = FHE.publishDecryptResult(selected);
-        status = Status.Settled;
+            if (refund > 0) {
+                (bool paidB, ) = payable(partyB).call{value: refund}('');
+                require(paidB, 'refund failed');
+            }
 
-        emit SettlementReady(hasDeal, finalSettlement);
+            emit RoomResolved(true, settlement, refund);
+            return;
+        }
+
+        status = Status.Closed;
+        finalSettlement = 0;
+        refund = counterpartyEscrow;
+
+        if (refund > 0) {
+            (bool refunded, ) = payable(partyB).call{value: refund}('');
+            require(refunded, 'close refund failed');
+        }
+
+        emit RoomResolved(false, 0, refund);
     }
 
     function getStatusLabel() external view returns (string memory) {
         if (status == Status.Waiting) return 'Waiting';
         if (status == Status.Submitted) return 'Submitted';
-        return 'Settled';
+        if (status == Status.Proposed) return 'Proposed';
+        if (status == Status.Resolved) return 'Resolved';
+        return 'Closed';
     }
 }
